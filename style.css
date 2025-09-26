@@ -17,6 +17,7 @@
   --accent-blue: var(--accent-primary);
   --accent-emerald: #846c3e;
   --accent-gold: var(--accent-secondary);
+  --page-gutter: clamp(16px, 6vw, 32px);
 }
 
 * {
@@ -69,17 +70,20 @@ h6 {
   margin: 0;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  padding: clamp(40px, 8vw, 64px) clamp(16px, 8vw, 48px) clamp(28px, 6vw, 40px);
-  padding-left: max(clamp(16px, 8vw, 48px), env(safe-area-inset-left));
-  padding-right: max(clamp(16px, 8vw, 48px), env(safe-area-inset-right));
+  padding: clamp(40px, 8vw, 64px) var(--page-gutter) clamp(28px, 6vw, 40px);
+  padding-left: max(var(--page-gutter), env(safe-area-inset-left));
+  padding-right: max(var(--page-gutter), env(safe-area-inset-right));
   text-align: center;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .page-header > * {
-  max-width: min(1100px, 90vw);
-  margin-left: auto;
-  margin-right: auto;
+  width: min(1100px, 100%);
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
 .page-header::after {
@@ -100,6 +104,7 @@ h6 {
 
 .page-header h1 {
   margin: 0;
+  width: 100%;
   font-family: var(--font-heading);
   font-size: clamp(2.2rem, 3.2vw, 3.1rem);
   letter-spacing: 0.18em;
@@ -118,7 +123,7 @@ h6 {
 main {
   max-width: 1100px;
   margin: 0 auto 64px;
-  padding: 0 24px 24px;
+  padding: 0 var(--page-gutter) 24px;
   display: grid;
   gap: 28px;
 }
@@ -542,9 +547,9 @@ main {
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   text-align: center;
-  padding: clamp(28px, 6vw, 48px) clamp(16px, 8vw, 48px) clamp(36px, 7vw, 56px);
-  padding-left: max(clamp(16px, 8vw, 48px), env(safe-area-inset-left));
-  padding-right: max(clamp(16px, 8vw, 48px), env(safe-area-inset-right));
+  padding: clamp(28px, 6vw, 48px) var(--page-gutter) clamp(36px, 7vw, 56px);
+  padding-left: max(var(--page-gutter), env(safe-area-inset-left));
+  padding-right: max(var(--page-gutter), env(safe-area-inset-right));
   color: var(--muted-text);
   font-size: 0.9rem;
   background: rgba(252, 246, 226, 0.6);
@@ -746,7 +751,7 @@ main {
 
 @media (max-width: 1024px) {
   main {
-    padding: 0 20px 24px;
+    padding: 0 var(--page-gutter) 24px;
     gap: 24px;
   }
 
@@ -783,7 +788,7 @@ main {
 
 @media (max-width: 600px) {
   main {
-    padding: 0 16px 20px;
+    padding: 0 var(--page-gutter) 20px;
     gap: 22px;
   }
 
@@ -792,9 +797,9 @@ main {
   }
 
   .page-header {
-    padding: 36px clamp(16px, 6vw, 32px) 24px;
-    padding-left: max(clamp(16px, 6vw, 32px), env(safe-area-inset-left));
-    padding-right: max(clamp(16px, 6vw, 32px), env(safe-area-inset-right));
+    padding: 32px var(--page-gutter) 24px;
+    padding-left: max(var(--page-gutter), env(safe-area-inset-left));
+    padding-right: max(var(--page-gutter), env(safe-area-inset-right));
   }
 
   .page-header h1 {
@@ -802,9 +807,9 @@ main {
   }
 
   .page-footer {
-    padding: 28px clamp(16px, 6vw, 32px) 36px;
-    padding-left: max(clamp(16px, 6vw, 32px), env(safe-area-inset-left));
-    padding-right: max(clamp(16px, 6vw, 32px), env(safe-area-inset-right));
+    padding: 24px var(--page-gutter) 32px;
+    padding-left: max(var(--page-gutter), env(safe-area-inset-left));
+    padding-right: max(var(--page-gutter), env(safe-area-inset-right));
   }
 
   .form-grid {
