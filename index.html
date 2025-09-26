@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Paths of Glory Combat Results Calculator</title>
+    <meta
+      name="description"
+      content="Paths of Glory combat results calculator with probability tables and loss curves."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Lora:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <h1>Paths of Glory Combat Results Calculator</h1>
+    </header>
+
+    <main>
+      <section class="panel" aria-labelledby="inputs-title">
+        <h2 id="inputs-title">Combat Inputs</h2>
+        <form id="combat-form" class="form-grid" autocomplete="off">
+          <fieldset class="fieldset">
+            <legend>Attacker</legend>
+            <div class="field">
+              <label for="attacker-table">Fire Table</label>
+              <select id="attacker-table" name="attacker-table">
+                <option value="army" selected>Army</option>
+                <option value="corps">Corps</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="attacker-column">Column</label>
+              <select id="attacker-column" name="attacker-column">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6-8">6-8</option>
+                <option value="9-11">9-11</option>
+                <option value="12-14">12-14</option>
+                <option value="15">15</option>
+                <option value="16+">16+</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="attacker-cc">Combat Card Modifier</label>
+              <input
+                id="attacker-cc"
+                name="attacker-cc"
+                type="number"
+                step="1"
+                value="0"
+              />
+            </div>
+            <div class="field checkbox">
+              <label>
+                <input
+                  id="neglect-trenches"
+                  name="neglect-trenches"
+                  type="checkbox"
+                />
+                Attacker can neglect trenches
+              </label>
+            </div>
+          </fieldset>
+
+          <fieldset class="fieldset">
+            <legend>Defender</legend>
+            <div class="field">
+              <label for="defender-table">Fire Table</label>
+              <select id="defender-table" name="defender-table">
+                <option value="army" selected>Army</option>
+                <option value="corps">Corps</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="defender-column">Column</label>
+              <select id="defender-column" name="defender-column">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+                <option value="6-8">6-8</option>
+                <option value="9-11">9-11</option>
+                <option value="12-14">12-14</option>
+                <option value="15">15</option>
+                <option value="16+">16+</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="defender-cc">Combat Card Modifier</label>
+              <input
+                id="defender-cc"
+                name="defender-cc"
+                type="number"
+                step="1"
+                value="0"
+              />
+            </div>
+            <div class="field">
+              <label for="terrain">Terrain</label>
+              <select id="terrain" name="terrain">
+                <option value="clear" selected>Clear</option>
+                <option value="mountain">Mountain</option>
+                <option value="swamp">Swamp</option>
+                <option value="forest">Forest</option>
+                <option value="desert">Desert</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="trench-level">Trench Level</label>
+              <select id="trench-level" name="trench-level">
+                <option value="0" selected>Level 0 (none)</option>
+                <option value="1">Level 1</option>
+                <option value="2">Level 2</option>
+              </select>
+            </div>
+          </fieldset>
+        </form>
+
+        <div class="form-actions">
+          <button type="button" id="calculate-btn" class="calculate-btn">
+            Calculate
+          </button>
+        </div>
+
+        <div class="effective-summary" aria-live="polite">
+          <h3>Effective Fire Columns</h3>
+          <div class="effective-summary-grid">
+            <div class="summary-block">
+              <h4>Attacker</h4>
+              <div id="attacker-effective-summary" class="summary-detail">
+                <span class="effective-placeholder"
+                  >Adjust inputs and press Calculate.</span
+                >
+              </div>
+            </div>
+            <div class="summary-block">
+              <h4>Defender</h4>
+              <div id="defender-effective-summary" class="summary-detail">
+                <span class="effective-placeholder"
+                  >Adjust inputs and press Calculate.</span
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="summary-title">
+        <h2 id="summary-title">Summary</h2>
+        <div class="summary-grid">
+          <div class="summary-card summary-card--horizontal">
+            <h3>Expected Losses</h3>
+            <div class="summary-horizontal summary-horizontal--stats">
+              <div class="summary-stat">
+                <span id="expected-attacker" class="summary-stat__value"
+                  >0.0</span
+                >
+                <span class="summary-stat__label">Attacker</span>
+              </div>
+              <div class="summary-stat">
+                <span id="expected-defender" class="summary-stat__value"
+                  >0.0</span
+                >
+                <span class="summary-stat__label">Defender</span>
+              </div>
+              <div class="summary-stat">
+                <span id="expected-net" class="summary-stat__value">0.0</span>
+                <span class="summary-stat__label">Net (Att &minus; Def)</span>
+              </div>
+            </div>
+          </div>
+          <div class="summary-grid--split">
+            <div class="summary-card">
+              <h3>Outcome Probabilities</h3>
+              <ul class="summary-list">
+                <li>
+                  <span class="summary-label">Attacker +2 or more</span>
+                  <span id="prob-attacker-plus-2" class="summary-value"
+                    >0%</span
+                  >
+                </li>
+                <li>
+                  <span class="summary-label">Attacker +1</span>
+                  <span id="prob-attacker-plus-1" class="summary-value"
+                    >0%</span
+                  >
+                </li>
+                <li>
+                  <span class="summary-label">Draw</span>
+                  <span id="prob-draw" class="summary-value">0%</span>
+                </li>
+                <li>
+                  <span class="summary-label">Defender +1</span>
+                  <span id="prob-defender-plus-1" class="summary-value"
+                    >0%</span
+                  >
+                </li>
+                <li>
+                  <span class="summary-label">Defender +2 or more</span>
+                  <span id="prob-defender-plus-2" class="summary-value"
+                    >0%</span
+                  >
+                </li>
+              </ul>
+            </div>
+            <div class="summary-card">
+              <h3>Win Probabilities</h3>
+              <ul class="summary-list summary-list--compact">
+                <li>
+                  <span class="summary-label">Attacker win</span>
+                  <span id="prob-attacker-win" class="summary-value">0%</span>
+                </li>
+                <li>
+                  <span class="summary-label">Draw</span>
+                  <span id="prob-win-draw" class="summary-value">0%</span>
+                </li>
+                <li>
+                  <span class="summary-label">Defender win</span>
+                  <span id="prob-defender-win" class="summary-value">0%</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="prob-table-title">
+        <h2 id="prob-table-title">Probability Tables</h2>
+        <div class="table-grid">
+          <table class="prob-table" id="attacker-prob-table">
+            <caption>
+              Attacker losses
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Loss Factor</th>
+                <th scope="col">Probability (%)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <table class="prob-table" id="defender-prob-table">
+            <caption>
+              Defender losses
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Loss Factor</th>
+                <th scope="col">Probability (%)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <table class="prob-table" id="net-prob-table">
+            <caption>
+              Net loss (Attacker &minus; Defender)
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Net Result</th>
+                <th scope="col">Probability (%)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="panel" aria-labelledby="grid-title">
+        <h2 id="grid-title">All 36 Outcomes</h2>
+        <div class="grid-wrapper">
+          <table
+            id="results-grid"
+            class="results-table"
+            aria-describedby="grid-caption"
+          >
+            <caption id="grid-caption">
+              Rows show attacker die results (1&ndash;6); columns show defender
+              die results (1&ndash;6).
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Att \ Def</th>
+                <th scope="col">1</th>
+                <th scope="col">2</th>
+                <th scope="col">3</th>
+                <th scope="col">4</th>
+                <th scope="col">5</th>
+                <th scope="col">6</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <p>
+        Content on this site is licensed under
+        <a
+          href="https://creativecommons.org/licenses/by-nc/4.0/"
+          rel="license noopener"
+          target="_blank"
+          >CC BY-NC 4.0</a
+        >; please credit the source for any non-commercial use. The source code
+        is available on
+        <a
+          href="https://github.com/ampercival/bggweb"
+          rel="noopener"
+          target="_blank"
+          >GitHub</a
+        >.
+      </p>
+    </footer>
+
+    <noscript>
+      <p class="noscript">
+        Enable JavaScript to compute combat results and visualizations.
+      </p>
+    </noscript>
+
+    <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
+    <script>
+      kofiWidgetOverlay.draw("ampercival", {
+        type: "floating-chat",
+        "floating-chat.donateButton.text": "Tip a coffee",
+        "floating-chat.donateButton.background-color": "#f5e4c3",
+        "floating-chat.donateButton.text-color": "#2e2a23",
+        "floating-chat.donateButton.text-size": "14",
+      });
+    </script>
+
+    <script src="script.js"></script>
+  </body>
+</html>
