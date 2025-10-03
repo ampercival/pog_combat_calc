@@ -398,7 +398,7 @@ main {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  min-width: 560px;
+  min-width: 100%;
   font-size: 0.95rem;
   background: rgba(255, 252, 242, 0.95);
   border: 1px solid rgba(64, 52, 38, 0.2);
@@ -444,6 +444,12 @@ main {
   display: block;
   font-size: 0.75rem;
   color: var(--muted-text);
+}
+
+@media (min-width: 700px) {
+  .results-table {
+    min-width: 560px;
+  }
 }
 
 .results-table td .losses {
@@ -864,7 +870,7 @@ main {
 
 }
 
-@media (max-width: 480px) {
+@media (max-width: 500px) {
   .field label,
   .field .label {
     text-transform: none;
@@ -879,6 +885,11 @@ main {
   .results-table thead th,
   .results-table td {
     padding: 8px 6px;
+  }
+
+  .results-table .losses,
+  .results-table td .roll:last-of-type {
+    display: none;
   }
 
   .results-table td .roll {
@@ -904,5 +915,4 @@ main {
   }
 
 }
-
 
