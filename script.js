@@ -110,38 +110,30 @@
 
     if (!form) return;
 
-    const calculateBtn = document.getElementById("calculate-btn");
-
+    // Inputs
     const attackerTableSelect = document.getElementById("attacker-table");
-
     const attackerColumnSelect = document.getElementById("attacker-column");
-
     const attackerModifierInput = document.getElementById("attacker-cc");
-
     const neglectTrenchesCheckbox = document.getElementById("neglect-trenches");
-
     const defenderTableSelect = document.getElementById("defender-table");
-
     const defenderColumnSelect = document.getElementById("defender-column");
-
     const defenderModifierInput = document.getElementById("defender-cc");
-
     const terrainSelect = document.getElementById("terrain");
-
     const trenchLevelSelect = document.getElementById("trench-level");
 
+    // Actions
+    const swapBtn = document.getElementById("swap-btn");
+    const resetBtn = document.getElementById("reset-btn");
+
+    // Outputs
     const attackerEffectiveSummaryEl = document.getElementById(
       "attacker-effective-summary",
     );
-
     const defenderEffectiveSummaryEl = document.getElementById(
       "defender-effective-summary",
     );
-
     const expectedAttackerEl = document.getElementById("expected-attacker");
-
     const expectedDefenderEl = document.getElementById("expected-defender");
-
     const expectedNetEl = document.getElementById("expected-net");
 
     const outcomeProbabilityEls = {
@@ -159,16 +151,15 @@
     };
 
     const gridBody = document.querySelector("#results-grid tbody");
-
     const attackerProbTable = document.querySelector(
       "#attacker-prob-table tbody",
     );
-
     const defenderProbTable = document.querySelector(
       "#defender-prob-table tbody",
     );
-
     const netProbTable = document.querySelector("#net-prob-table tbody");
+
+    // --- Helpers ---
 
     function clamp(value, min, max) {
       return Math.min(max, Math.max(min, value));
@@ -176,7 +167,6 @@
 
     function safeNumber(value, fallback = 0) {
       const parsed = Number(value);
-
       return Number.isFinite(parsed) ? parsed : fallback;
     }
 
@@ -196,7 +186,6 @@
       if (!selectElement) return;
 
       const config = getTableConfig(tableKey);
-
       const previousValue = preserveValue ? selectElement.value : null;
 
       while (selectElement.firstChild) {
@@ -205,11 +194,8 @@
 
       config.columns.forEach((label) => {
         const option = document.createElement("option");
-
         option.value = label;
-
         option.textContent = label;
-
         selectElement.appendChild(option);
       });
 
@@ -224,25 +210,8 @@
       }
     }
 
-    function renderEffectivePlaceholder(target, message) {
-      if (!target) return;
-      target.innerHTML = `<p class="effective-placeholder">${message}</p>`;
-    }
-
-    function markPending() {
-      if (initializing || !hasCalculated) {
-        return;
-      }
-
-      const pendingText = "Inputs changed. Press Calculate to refresh.";
-
-      renderEffectivePlaceholder(attackerEffectiveSummaryEl, pendingText);
-      renderEffectivePlaceholder(defenderEffectiveSummaryEl, pendingText);
-    }
-
     function getFormValues() {
       const trenchLevelValue = trenchLevelSelect.value;
-
       const normalizedTrenchLevel = Object.prototype.hasOwnProperty.call(
         trenchEffects,
         trenchLevelValue,
@@ -253,71 +222,51 @@
       return {
         attacker: {
           table: attackerTableSelect.value,
-
           column: attackerColumnSelect.value,
         },
-
         defender: {
           table: defenderTableSelect.value,
-
           column: defenderColumnSelect.value,
         },
-
         attackerModifier: safeNumber(attackerModifierInput.value, 0),
-
         defenderModifier: safeNumber(defenderModifierInput.value, 0),
-
         neglectTrenches: neglectTrenchesCheckbox.checked,
-
         terrain: terrainSelect.value,
-
         trenchLevel: normalizedTrenchLevel,
       };
     }
 
     function lookupLoss(table, roll, columnIndex) {
       const row = table[roll - 1];
-
       if (!row) return 0;
-
       const value = row[columnIndex];
-
       return Number.isFinite(value) ? value : 0;
     }
 
     function applyShift(baseIndex, shift, max) {
       const shifted = baseIndex + shift;
-
       if (shifted < 0) return 0;
-
       if (shifted >= max) return max - 1;
-
       return shifted;
     }
 
     function incrementMap(map, key) {
       const existing = map.get(key) ?? 0;
-
       map.set(key, existing + 1);
     }
 
     function mapToDistribution(map) {
       const entries = Array.from(map.entries()).map(([key, count]) => ({
         value: Number(key),
-
         count,
-
         probability: count / TOTAL_OUTCOMES,
       }));
-
       entries.sort((a, b) => a.value - b.value);
-
       return entries;
     }
 
     function getMode(distribution) {
       if (distribution.length === 0) return null;
-
       return distribution.reduce((best, current) => {
         if (
           !best ||
@@ -326,33 +275,25 @@
         ) {
           return current;
         }
-
         return best;
       }, null);
     }
 
     function updateProbabilityTable(tableBody, distribution) {
       tableBody.innerHTML = "";
-
       if (distribution.length === 0) {
         const row = document.createElement("tr");
-
         row.innerHTML = '<td colspan="2">None</td>';
-
         tableBody.appendChild(row);
-
         return;
       }
 
       distribution.forEach(({ value, probability }) => {
         const row = document.createElement("tr");
-
         const probPercent = (probability * 100).toFixed(
           probability > 0 && probability < 0.1 ? 2 : 1,
         );
-
         row.innerHTML = `<td>${value}</td><td>${probPercent}%</td>`;
-
         tableBody.appendChild(row);
       });
     }
@@ -361,18 +302,14 @@
       if (!Number.isFinite(probability) || probability <= 0) {
         return "0%";
       }
-
       const digits = probability > 0 && probability < 0.1 ? 2 : 1;
-
       return `${(probability * 100).toFixed(digits)}%`;
     }
 
     function updateProbabilityGroup(targets, probabilities) {
       if (!targets) return;
-
       Object.entries(targets).forEach(([key, element]) => {
         if (!element) return;
-
         element.textContent = formatProbability(probabilities[key] ?? 0);
       });
     }
@@ -402,11 +339,9 @@
       trenchLevel,
     ) {
       const lines = [];
-
       const breakdownText = shiftBreakdown.length
         ? ` (${shiftBreakdown.join(", ")})`
         : "";
-
       const trenchDisplay = trenchesIgnored
         ? "Ignored"
         : trenchLevel === "0"
@@ -414,13 +349,9 @@
           : `Level ${trenchLevel}`;
 
       lines.push(`${sideLabel}: ${tableLabel} table`);
-
       lines.push(`Base column: ${baseColumnLabel}`);
-
       lines.push(`Column shift: ${signed(totalShift)}${breakdownText}`);
-
       lines.push(`Effective column: ${effectiveColumnLabel}`);
-
       lines.push(`Die modifier: ${signed(modifier)}`);
 
       const listItems = lines
@@ -440,10 +371,8 @@
 
     function renderOutcomeGrid(matrix) {
       const rowsHtml = matrix
-
         .map((row, idx) => {
           const cellsHtml = row
-
             .map((cell) => {
               const {
                 attackerLoss,
@@ -467,25 +396,25 @@
               const netDisplay = net > 0 ? `+${net}` : net.toString();
 
               return `
-
                 <td class="${netClass}">
-
-                  <div class="losses">Att: ${attackerLoss} | Def: ${defenderLoss}</div>
-
-                  <div class="roll">Net ${netDisplay}</div>
-
-                  <div class="roll">Rolls Att ${formatRoll(attackerRoll, attackerEffectiveRoll)} | Def ${formatRoll(defenderRoll, defenderEffectiveRoll)}</div>
-
+                  <div class="losses">
+                    <span class="loss-pair">
+                      <span class="loss-label">A</span>
+                      <span class="loss-value">${attackerLoss}</span>
+                    </span>
+                    <span class="loss-pair">
+                      <span class="loss-label">D</span>
+                      <span class="loss-value">${defenderLoss}</span>
+                    </span>
+                  </div>
+                  <div class="net-line">Net ${netDisplay}</div>
+                  <div class="roll-details">Rolls Att ${formatRoll(attackerRoll, attackerEffectiveRoll)} | Def ${formatRoll(defenderRoll, defenderEffectiveRoll)}</div>
                 </td>
-
               `;
             })
-
             .join("");
-
           return `<tr><th scope="row">${idx + 1}</th>${cellsHtml}</tr>`;
         })
-
         .join("");
 
       gridBody.innerHTML = rowsHtml;
@@ -499,49 +428,42 @@
       expectedNet,
     ) {
       expectedAttackerEl.textContent = expectedAttacker.toFixed(2);
-
       expectedDefenderEl.textContent = expectedDefender.toFixed(2);
-
       expectedNetEl.textContent = expectedNet.toFixed(2);
     }
+
+    // --- Core Logic ---
 
     function recalculate() {
       const values = getFormValues();
 
       const attackerConfig = getTableConfig(values.attacker.table);
-
       const defenderConfig = getTableConfig(values.defender.table);
 
       const attackerBaseColumnIndex = attackerConfig.headerIndex(
         values.attacker.column,
       );
-
       const defenderBaseColumnIndex = defenderConfig.headerIndex(
         values.defender.column,
       );
 
       const terrainEffect =
         terrainEffects[values.terrain] ?? terrainEffects.clear;
-
       const trenchEffect =
         trenchEffects[values.trenchLevel] ?? trenchEffects[0];
-
       const terrainLabel = terrainLabels[values.terrain] ?? "Unknown";
 
       const attackerTerrainShift = terrainEffect.attacker ?? 0;
-
       const defenderTerrainShift = terrainEffect.defender ?? 0;
 
       const attackerTrenchShift = values.neglectTrenches
         ? 0
         : (trenchEffect.attacker ?? 0);
-
       const defenderTrenchShift = values.neglectTrenches
         ? 0
         : (trenchEffect.defender ?? 0);
 
       const attackerShiftTotal = attackerTerrainShift + attackerTrenchShift;
-
       const defenderShiftTotal = defenderTerrainShift + defenderTrenchShift;
 
       const attackerColumnIndex = applyShift(
@@ -549,7 +471,6 @@
         attackerShiftTotal,
         attackerConfig.columns.length,
       );
-
       const defenderColumnIndex = applyShift(
         defenderBaseColumnIndex,
         defenderShiftTotal,
@@ -557,29 +478,23 @@
       );
 
       const attackerLossCounts = new Map();
-
       const defenderLossCounts = new Map();
-
       const netLossCounts = new Map();
 
       let attackerLossSum = 0;
-
       let defenderLossSum = 0;
-
       let netLossSum = 0;
 
       const matrix = [];
 
       for (let attackerRoll = 1; attackerRoll <= 6; attackerRoll += 1) {
         const row = [];
-
         for (let defenderRoll = 1; defenderRoll <= 6; defenderRoll += 1) {
           const attackerEffectiveRoll = clamp(
             attackerRoll + values.attackerModifier,
             1,
             6,
           );
-
           const defenderEffectiveRoll = clamp(
             defenderRoll + values.defenderModifier,
             1,
@@ -591,7 +506,6 @@
             attackerEffectiveRoll,
             attackerColumnIndex,
           );
-
           const attackerLoss = lookupLoss(
             defenderConfig.data,
             defenderEffectiveRoll,
@@ -601,55 +515,38 @@
           const net = attackerLoss - defenderLoss;
 
           incrementMap(attackerLossCounts, attackerLoss);
-
           incrementMap(defenderLossCounts, defenderLoss);
-
           incrementMap(netLossCounts, net);
 
           attackerLossSum += attackerLoss;
-
           defenderLossSum += defenderLoss;
-
           netLossSum += net;
 
           row.push({
             attackerRoll,
-
             defenderRoll,
-
             attackerEffectiveRoll,
-
             defenderEffectiveRoll,
-
             attackerLoss,
-
             defenderLoss,
-
             net,
           });
         }
-
         matrix.push(row);
       }
 
       const attackerDistribution = mapToDistribution(attackerLossCounts);
-
       const defenderDistribution = mapToDistribution(defenderLossCounts);
-
       const netDistribution = mapToDistribution(netLossCounts);
 
       const expectedAttacker = attackerLossSum / TOTAL_OUTCOMES;
-
       const expectedDefender = defenderLossSum / TOTAL_OUTCOMES;
-
       const expectedNet = netLossSum / TOTAL_OUTCOMES;
 
       const attackerMode = getMode(attackerDistribution);
-
       const defenderMode = getMode(defenderDistribution);
 
       renderOutcomeGrid(matrix);
-
       updateSummary(
         expectedAttacker,
         expectedDefender,
@@ -659,9 +556,7 @@
       );
 
       updateProbabilityTable(attackerProbTable, attackerDistribution);
-
       updateProbabilityTable(defenderProbTable, defenderDistribution);
-
       updateProbabilityTable(netProbTable, netDistribution);
 
       const probabilityFor = (predicate) =>
@@ -684,25 +579,20 @@
       });
 
       const attackerShiftBreakdown = [];
-
       if (attackerTerrainShift !== 0)
         attackerShiftBreakdown.push(`terrain ${signed(attackerTerrainShift)}`);
-
       if (!values.neglectTrenches && attackerTrenchShift !== 0)
         attackerShiftBreakdown.push(`trench ${signed(attackerTrenchShift)}`);
 
       const defenderShiftBreakdown = [];
-
       if (defenderTerrainShift !== 0)
         defenderShiftBreakdown.push(`terrain ${signed(defenderTerrainShift)}`);
-
       if (!values.neglectTrenches && defenderTrenchShift !== 0)
         defenderShiftBreakdown.push(`trench ${signed(defenderTrenchShift)}`);
 
       const attackerBaseLabel =
         attackerConfig.columns[attackerBaseColumnIndex] ??
         attackerConfig.columns[0];
-
       const defenderBaseLabel =
         defenderConfig.columns[defenderBaseColumnIndex] ??
         defenderConfig.columns[0];
@@ -710,57 +600,163 @@
       const attackerEffectiveLabel =
         attackerConfig.columns[attackerColumnIndex] ??
         attackerConfig.columns[attackerConfig.columns.length - 1];
-
       const defenderEffectiveLabel =
         defenderConfig.columns[defenderColumnIndex] ??
         defenderConfig.columns[defenderConfig.columns.length - 1];
 
       attackerEffectiveSummaryEl.innerHTML = buildSummaryText(
         "Attacker",
-
         tableLabelMap[values.attacker.table] ?? "Corps",
-
         attackerBaseLabel,
-
         attackerEffectiveLabel,
-
         attackerShiftTotal,
-
         attackerShiftBreakdown,
-
         values.attackerModifier,
-
         terrainLabel,
-
         values.neglectTrenches,
-
         values.trenchLevel,
       );
 
       defenderEffectiveSummaryEl.innerHTML = buildSummaryText(
         "Defender",
-
         tableLabelMap[values.defender.table] ?? "Corps",
-
         defenderBaseLabel,
-
         defenderEffectiveLabel,
-
         defenderShiftTotal,
-
         defenderShiftBreakdown,
-
         values.defenderModifier,
-
         terrainLabel,
-
         values.neglectTrenches,
-
         values.trenchLevel,
       );
-
-      hasCalculated = true;
     }
+
+    // --- State Management ---
+
+    function saveState() {
+      const state = {
+        attackerTable: attackerTableSelect.value,
+        attackerColumn: attackerColumnSelect.value,
+        attackerCC: attackerModifierInput.value,
+        neglectTrenches: neglectTrenchesCheckbox.checked,
+        defenderTable: defenderTableSelect.value,
+        defenderColumn: defenderColumnSelect.value,
+        defenderCC: defenderModifierInput.value,
+        terrain: terrainSelect.value,
+        trenchLevel: trenchLevelSelect.value,
+      };
+      localStorage.setItem("pog_combat_calc_state", JSON.stringify(state));
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem("pog_combat_calc_state");
+      if (!saved) return;
+
+      try {
+        const state = JSON.parse(saved);
+        if (state.attackerTable) attackerTableSelect.value = state.attackerTable;
+        // Trigger change to populate columns
+        populateColumnOptions(
+          attackerColumnSelect,
+          attackerTableSelect.value,
+          false,
+        );
+        if (state.attackerColumn)
+          attackerColumnSelect.value = state.attackerColumn;
+        if (state.attackerCC) attackerModifierInput.value = state.attackerCC;
+        if (state.neglectTrenches !== undefined)
+          neglectTrenchesCheckbox.checked = state.neglectTrenches;
+
+        if (state.defenderTable) defenderTableSelect.value = state.defenderTable;
+        populateColumnOptions(
+          defenderColumnSelect,
+          defenderTableSelect.value,
+          false,
+        );
+        if (state.defenderColumn)
+          defenderColumnSelect.value = state.defenderColumn;
+        if (state.defenderCC) defenderModifierInput.value = state.defenderCC;
+
+        if (state.terrain) terrainSelect.value = state.terrain;
+        if (state.trenchLevel) trenchLevelSelect.value = state.trenchLevel;
+      } catch (e) {
+        console.error("Failed to load state", e);
+      }
+    }
+
+    function swapSides() {
+      const attTable = attackerTableSelect.value;
+      const attCol = attackerColumnSelect.value;
+      const attCC = attackerModifierInput.value;
+
+      const defTable = defenderTableSelect.value;
+      const defCol = defenderColumnSelect.value;
+      const defCC = defenderModifierInput.value;
+
+      // Swap Table
+      attackerTableSelect.value = defTable;
+      defenderTableSelect.value = attTable;
+
+      // Update columns for new tables
+      populateColumnOptions(
+        attackerColumnSelect,
+        attackerTableSelect.value,
+        false,
+      );
+      populateColumnOptions(
+        defenderColumnSelect,
+        defenderTableSelect.value,
+        false,
+      );
+
+      // Swap Columns (if valid in new table, otherwise default is set by populate)
+      // We try to set the value, if it exists in the new options it will stick
+      if (
+        Array.from(attackerColumnSelect.options).some(
+          (o) => o.value === defCol,
+        )
+      ) {
+        attackerColumnSelect.value = defCol;
+      }
+      if (
+        Array.from(defenderColumnSelect.options).some(
+          (o) => o.value === attCol,
+        )
+      ) {
+        defenderColumnSelect.value = attCol;
+      }
+
+      // Swap CC
+      attackerModifierInput.value = defCC;
+      defenderModifierInput.value = attCC;
+
+      handleUpdate();
+    }
+
+    function resetForm() {
+      attackerTableSelect.value = "army";
+      populateColumnOptions(attackerColumnSelect, "army", false);
+      attackerColumnSelect.value = "1";
+      attackerModifierInput.value = "0";
+      neglectTrenchesCheckbox.checked = false;
+
+      defenderTableSelect.value = "army";
+      populateColumnOptions(defenderColumnSelect, "army", false);
+      defenderColumnSelect.value = "1";
+      defenderModifierInput.value = "0";
+
+      terrainSelect.value = "clear";
+      trenchLevelSelect.value = "0";
+
+      handleUpdate();
+    }
+
+    function handleUpdate() {
+      recalculate();
+      saveState();
+    }
+
+    // --- Event Listeners ---
 
     attackerTableSelect.addEventListener("change", () => {
       populateColumnOptions(
@@ -768,8 +764,7 @@
         attackerTableSelect.value,
         false,
       );
-
-      markPending();
+      handleUpdate();
     });
 
     defenderTableSelect.addEventListener("change", () => {
@@ -778,37 +773,37 @@
         defenderTableSelect.value,
         false,
       );
-
-      markPending();
+      handleUpdate();
     });
 
-    attackerColumnSelect.addEventListener("change", markPending);
-    defenderColumnSelect.addEventListener("change", markPending);
-    attackerModifierInput.addEventListener("input", markPending);
-    defenderModifierInput.addEventListener("input", markPending);
-    neglectTrenchesCheckbox.addEventListener("change", markPending);
-    terrainSelect.addEventListener("change", markPending);
-    trenchLevelSelect.addEventListener("change", markPending);
-    calculateBtn.addEventListener("click", () => {
-      recalculate();
-    });
+    attackerColumnSelect.addEventListener("change", handleUpdate);
+    defenderColumnSelect.addEventListener("change", handleUpdate);
+    attackerModifierInput.addEventListener("input", handleUpdate);
+    defenderModifierInput.addEventListener("input", handleUpdate);
+    neglectTrenchesCheckbox.addEventListener("change", handleUpdate);
+    terrainSelect.addEventListener("change", handleUpdate);
+    trenchLevelSelect.addEventListener("change", handleUpdate);
+
+    if (swapBtn) swapBtn.addEventListener("click", swapSides);
+    if (resetBtn) resetBtn.addEventListener("click", resetForm);
 
     form.addEventListener("submit", (event) => event.preventDefault());
 
+    // --- Initialization ---
+
+    // Initial population (before loadState to ensure options exist)
     populateColumnOptions(
       attackerColumnSelect,
       attackerTableSelect.value,
       false,
     );
-
     populateColumnOptions(
       defenderColumnSelect,
       defenderTableSelect.value,
       false,
     );
 
-    initializing = false;
-
+    loadState();
     recalculate();
   }
 
